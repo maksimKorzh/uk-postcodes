@@ -5,6 +5,7 @@ from os.path import isfile, join
 import csv
 import json
 import datetime
+import csv
 
 class PostcodesMapper(scrapy.Spider):
     # spider name
@@ -16,39 +17,23 @@ class PostcodesMapper(scrapy.Spider):
     }
     
     # store mappings
+    postcodes = []
     mapped = []
     
     def __init__(self):
-        # get postcode files
-        self.postcodes = [f for f in listdir('CSV') if isfile(join('CSV', f))]
+        # load postcode districts
+        with open('postcode_districts.csv') as f:
+            reader = csv.DictReader(f)
+            
+            for line in reader:
+                self.postcodes.append(line['postcode_districts'])
 
         # loop over postcode files
-        for postcode in self.postcodes:
-            with open('./CSV/' + postcode, 'r') as csv_file:
-                reader = csv.reader(csv_file)
-                
-                prev = ''
-                
-                # append results to mapped
-                for line in reader:
-                    try:
-                        # extract outcodes
-                        if len(line[0]) > 4:
-                            current = line[0][0:3]
-                        else:
-                            current = line[0].split()[0]
-                        
-                        if current != prev:
-                            prev = current
-                        
-                            self.mapped.append({
-                                'postcode': current,
-                                'locationId': ''
-                            })
-
-                    except:
-                        # only ONE result fails because of malformed column
-                        pass
+        for postcode in self.postcodes:            
+            self.mapped.append({
+                'postcode': postcode,
+                'locationId': ''
+            })
 
     def start_requests(self):
         # loop over postcodes
